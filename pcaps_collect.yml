@@ -1,0 +1,30 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Copy pcap file from control node
+      fetch:
+        src: /home/miles/Desktop/pcaps.pcap
+        dest: /home/miles/CPE243_HOA8.1/
+        flat: yes
+
+- hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Create directory for executable file
+      file:
+        path: /home/miles/CPE243_HOA8.1
+        state: directory
+
+    - name: Extract executable file
+      command: tcpflow -r /home/miles/CPE243_HOA8.1/pcaps.pcap -o /home/miles/CPE243_HOA8.1
+      args:
+        creates: /home/miles/CPE243_HOA8.1/report.xml
+
+    - name: Debug.exe file
+      command: cat /home/miles/CPE243_HOA8.1/report.xml
+      register: cat_output
+      changed_when: false
+
+    - debug:
+        var: cat_output.stdout_lines
