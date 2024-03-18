@@ -1,0 +1,30 @@
+---
+- name: Collect PCAP file on Manage Node
+  hosts: all
+  become: true
+  tasks:
+    - name: Collect PCAP file
+      command: tcpdump -i any -w /tmp/captured.pcap
+      async: 600
+      poll: 0
+      become: yes
+      register: tcpdump_process
+      ignore_errors: yes
+
+- name: Copy PCAP file to Control Node
+  hosts: manage_node
+  tasks:
+    - name: Copy PCAP file from manage node to control node
+      fetch:
+        src: /tmp/captured.pcap
+        dest: /home/miles/Documents/
+        flat: yes
+      become: yes
+
+    - name: Run script to process PCAP file
+      script: |
+        #!/bin/bash
+        /usr/bin/tcpflow -r "{{ pcap_file }}" -o /home/miles/Documents
+      vars:
+        pcap_file: "/home/miles/Documents"
+      become: yes
